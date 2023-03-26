@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import styles from '../styles/Home.module.css'; 
+
+const mean = (arr) => {
+  if (arr.length === 0) return 0;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+};
+
+const standardDeviation = (arr, avg) => {
+  if (arr.length === 0) return 0;
+  return Math.sqrt(arr.map((x) => Math.pow(x - avg, 2)).reduce((a, b) => a + b, 0) / arr.length);
+};
+
 
 export default function Home() {
   const [electricityPrices, setElectricityPrices] = useState([]);
@@ -39,6 +51,19 @@ export default function Home() {
     });
   }, []);
 
+  const prices = electricityPrices.map((price) => price.SEK_per_kWh);
+  const meanPrice = mean(prices);
+  const stdDevPrice = standardDeviation(prices, meanPrice);
+
+  const priceRowClass = (price) => {
+    if (price < meanPrice - stdDevPrice) {
+      return styles['below-one-std-dev']; // Update this line
+    } else {
+      return styles['not-below-one-std-dev'];
+    }
+  };
+  
+
   return (
     <div>
       <table>
@@ -52,7 +77,7 @@ export default function Home() {
         </thead>
         <tbody>
           {electricityPrices.map((price, index) => (
-            <tr key={index}>
+            <tr key={index} className={priceRowClass(price.SEK_per_kWh)}>
               <td>{price.time_start}</td>
               <td>{price.time_end}</td>
               <td>{price.SEK_per_kWh}</td>

@@ -83,6 +83,14 @@
   height: 1em;
 }
 
+.below-one-std-dev {
+  background-color: #006e18;
+}
+
+.not-below-one-std-dev {
+  background-color: #ff8989;
+}
+
 @media (max-width: 600px) {
   .grid {
     width: 100%;
