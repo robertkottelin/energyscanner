@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 export default function Home() {
   const [electricityPrices, setElectricityPrices] = useState([]);
 
-  const fetchElectricityPrices = async () => {
-    const apiUrl = `https://www.elprisetjustnu.se/api/v1/prices/2023/03-26_SE3.json`;
+  const fetchElectricityPrices = async (date) => {
+    const year = date.slice(0, 4);
+    const monthDay = date.slice(5);
+    const apiUrl = `https://www.elprisetjustnu.se/api/v1/prices/${year}/${monthDay}_SE3.json`;
     const proxyUrl = `http://localhost:8080/`; // Replace with the address of your proxy server
     const response = await fetch(proxyUrl + apiUrl, {
       method: 'GET',
@@ -12,28 +14,53 @@ export default function Home() {
 
     if (response.ok) {
       const data = await response.json();
-      setElectricityPrices(data);
-      console.log(electricityPrices);
+      setElectricityPrices((prevState) => [...prevState, ...data]);
     } else {
       console.error('Error fetching electricity prices:', response.status, response.statusText);
     }
   };
 
+  const getLastTenDays = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 10; i++) {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() - i);
+      const dateString = currentDate.toISOString().slice(0, 10);
+      dates.push(dateString);
+    }
+    return dates;
+  };
+
   useEffect(() => {
-    fetchElectricityPrices();
+    const dates = getLastTenDays();
+    dates.forEach((date) => {
+      fetchElectricityPrices(date);
+    });
   }, []);
 
   return (
     <div>
-      {electricityPrices.map((price, index) => (
-        <div key={index}>
-          <p>Start Time: {price.time_start}</p>
-          <p>End Time: {price.time_end}</p>
-          <p>Price (SEK/kWh): {price.SEK_per_kWh}</p>
-          <p>Price (EUR/kWh): {price.EUR_per_kWh}</p>
-          <hr />
-        </div>
-      ))}
+      <table>
+        <thead>
+          <tr>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Price (SEK/kWh)</th>
+            <th>Price (EUR/kWh)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {electricityPrices.map((price, index) => (
+            <tr key={index}>
+              <td>{price.time_start}</td>
+              <td>{price.time_end}</td>
+              <td>{price.SEK_per_kWh}</td>
+              <td>{price.EUR_per_kWh}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
